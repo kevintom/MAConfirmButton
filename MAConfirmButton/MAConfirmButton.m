@@ -12,12 +12,16 @@
 #define kPadding 20.0
 #define kFontSize 14.0
 
+#define kDisabledColor [UIColor colorWithRed:(204.0/255.0) green:(204.0/255.0) blue:(204.0/255.0) alpha:1.0]
+#define kNormalColor [UIColor colorWithRed:(0.0/255.0) green:(122.0/255.0) blue:(255.0/255.0) alpha:1.0]
+#define kBuyColor [UIColor colorWithRed:(25.0/255.0) green:(171.0/255.0) blue:(32.0/255.0) alpha:1.0]
+
 @interface MAConfirmButton ()
 
 @property (nonatomic, copy) NSString *title;
 @property (nonatomic, copy) NSString *confirm;
 @property (nonatomic, copy) NSString *disabled;
-@property (nonatomic, retain) UIColor *tint;
+@property (nonatomic, strong) UIColor *tint;
 
 - (void)toggle;
 - (void)setupLayers;
@@ -31,28 +35,21 @@
 
 @synthesize title, confirm, disabled, tint, toggleAnimation;
 
-- (void)dealloc{
-    [title release];
-    [confirm release];
-    [disabled release];
-    [tint release];
-    [super dealloc];
-}
 
 + (MAConfirmButton *)buttonWithTitle:(NSString *)titleString confirm:(NSString *)confirmString{	
-    MAConfirmButton *button = [[[super alloc] initWithTitle:titleString confirm:confirmString] autorelease];	
+    MAConfirmButton *button = [[super alloc] initWithTitle:titleString confirm:confirmString];	
     return button;
 }
 
 + (MAConfirmButton *)buttonWithDisabledTitle:(NSString *)disabledString{	
-    MAConfirmButton *button = [[[super alloc] initWithDisabledTitle:disabledString] autorelease];	
+    MAConfirmButton *button = [[super alloc] initWithDisabledTitle:disabledString];	
     return button;
 }
 
 - (id)initWithDisabledTitle:(NSString *)disabledString{
     self = [super initWithFrame:CGRectZero];
     if(self != nil){
-        disabled = [disabledString retain];
+        disabled = disabledString;
 
         toggleAnimation = MAConfirmButtonToggleAnimationLeft;
 
@@ -65,14 +62,12 @@
         self.frame = r;
 
         [self setTitle:disabled forState:UIControlStateNormal];
-        [self setTitleColor:[UIColor colorWithWhite:0.6 alpha:1] forState:UIControlStateNormal];
-        [self setTitleShadowColor:[UIColor colorWithWhite:1 alpha:1] forState:UIControlStateNormal];		
+        [self setTitleColor:kDisabledColor forState:UIControlStateNormal];
 
-        self.titleLabel.textAlignment = UITextAlignmentCenter;
-        self.titleLabel.shadowOffset = CGSizeMake(0, 1);
+        self.titleLabel.textAlignment = NSTextAlignmentCenter;
         self.titleLabel.backgroundColor = [UIColor clearColor];
         self.titleLabel.font = [UIFont boldSystemFontOfSize:kFontSize];
-        self.tint = [UIColor colorWithWhite:0.85 alpha:1];	
+        self.tint = kDisabledColor;
 
         [self setupLayers];
     }	
@@ -82,8 +77,9 @@
 - (id)initWithTitle:(NSString *)titleString confirm:(NSString *)confirmString{
     self = [super initWithFrame:CGRectZero];
     if(self != nil){
-        self.title = [titleString retain];
-        self.confirm = [confirmString retain];
+        self.title = titleString;
+        self.confirm = confirmString;
+        self.tint = kNormalColor;
 
         toggleAnimation = MAConfirmButtonToggleAnimationLeft;
 
@@ -96,38 +92,37 @@
         self.frame = r;
 
         [self setTitle:title forState:UIControlStateNormal];
-        [self setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];		
-        [self setTitleShadowColor:[UIColor colorWithWhite:0 alpha:0.5] forState:UIControlStateNormal];
+        [self setTitleColor:tint forState:UIControlStateNormal];
 
-        self.titleLabel.textAlignment = UITextAlignmentCenter;
-        self.titleLabel.shadowOffset = CGSizeMake(0, -1);
+        self.titleLabel.textAlignment = NSTextAlignmentCenter;
         self.titleLabel.backgroundColor = [UIColor clearColor];
         self.titleLabel.font = [UIFont boldSystemFontOfSize:kFontSize];
-        self.tint = [UIColor colorWithRed:0.220 green:0.357 blue:0.608 alpha:1];
 
         [self setupLayers];
     }	
     return self;
 }
 
-- (void)toggle{    
-    if(self.userInteractionEnabled){
+- (void)toggle {
+    if (self.userInteractionEnabled) {
         self.userInteractionEnabled = NO;
         self.titleLabel.alpha = 0;
 
         CGSize size;
 
-        if(disabled){
+        if (disabled) {
             [self setTitle:disabled forState:UIControlStateNormal];
-            [self setTitleColor:[UIColor colorWithWhite:0.6 alpha:1] forState:UIControlStateNormal];
-            [self setTitleShadowColor:[UIColor colorWithWhite:1 alpha:1] forState:UIControlStateNormal];
-            self.titleLabel.shadowOffset = CGSizeMake(0, 1);
+            [self setTitleColor:kDisabledColor forState:UIControlStateNormal];
             size = [disabled sizeWithFont:[UIFont boldSystemFontOfSize:kFontSize]];
-        }else if(selected){
-            [self setTitle:confirm forState:UIControlStateNormal];		
+        }
+        else if (selected) {
+            [self setTitle:confirm forState:UIControlStateNormal];
+            [self setTitleColor:kBuyColor forState:UIControlStateNormal];
             size = [confirm sizeWithFont:[UIFont boldSystemFontOfSize:kFontSize]];
-        }else{
+        }
+        else {
             [self setTitle:title forState:UIControlStateNormal];
+            [self setTitleColor:tint forState:UIControlStateNormal];
             size = [title sizeWithFont:[UIFont boldSystemFontOfSize:kFontSize]];
         }
 
@@ -182,22 +177,23 @@
             [self setNeedsLayout];
         }];
 
-        UIColor *greenColor = [UIColor colorWithRed:0.439 green:0.741 blue:0.314 alpha:1.];
+        UIColor *greenColor = kBuyColor;
 
         //Animate color change
-        CABasicAnimation *colorAnimation = [CABasicAnimation animationWithKeyPath:@"backgroundColor"];
-        colorAnimation.removedOnCompletion = NO;
-        colorAnimation.fillMode = kCAFillModeForwards;
+        CABasicAnimation *borderAnimation = [CABasicAnimation animationWithKeyPath:@"borderColor"];
+        borderAnimation.removedOnCompletion = NO;
+        borderAnimation.fillMode = kCAFillModeForwards;
 
-        if(disabled){
-        colorAnimation.fromValue = (id)greenColor.CGColor;
-        colorAnimation.toValue = (id)[UIColor colorWithWhite:0.85 alpha:1].CGColor;
-        }else{
-        colorAnimation.fromValue = selected ? (id)tint.CGColor : (id)greenColor.CGColor;
-        colorAnimation.toValue = selected ? (id)greenColor.CGColor : (id)tint.CGColor;	
+        if (disabled) {
+            borderAnimation.fromValue = (id)greenColor.CGColor;
+            borderAnimation.toValue = (id)kDisabledColor.CGColor;
+        }
+        else {
+            borderAnimation.fromValue = selected ? (id)tint.CGColor : (id)greenColor.CGColor;
+            borderAnimation.toValue = selected ? (id)greenColor.CGColor : (id)tint.CGColor;
         }
 
-        [colorLayer addAnimation:colorAnimation forKey:@"colorAnimation"];
+        [colorLayer addAnimation:borderAnimation forKey:@"colorAnimation"];
 
         //Animate layer scaling
         for(CALayer *layer in self.layer.sublayers){
@@ -225,31 +221,16 @@
 }
 
 - (void)setupLayers{
-  
-    CAGradientLayer *bevelLayer = [CAGradientLayer layer];
-    bevelLayer.frame = CGRectMake(0, 0, CGRectGetWidth(self.frame), CGRectGetHeight(self.frame));		
-    bevelLayer.colors = [NSArray arrayWithObjects:(id)[UIColor colorWithWhite:0 alpha:0.5].CGColor, [UIColor whiteColor].CGColor, nil];
-    bevelLayer.cornerRadius = 4.0;
-    bevelLayer.needsDisplayOnBoundsChange = YES;
 
     colorLayer = [CALayer layer];
-    colorLayer.frame = CGRectMake(0, 1, CGRectGetWidth(self.frame), CGRectGetHeight(self.frame)-2);		
-    colorLayer.borderColor = [UIColor colorWithWhite:0 alpha:0.1].CGColor;
-    colorLayer.backgroundColor = tint.CGColor;
+    colorLayer.frame = CGRectMake(0, 0, CGRectGetWidth(self.frame), CGRectGetHeight(self.frame));
+    colorLayer.borderColor = tint.CGColor;
+    colorLayer.backgroundColor = [UIColor clearColor].CGColor;
     colorLayer.borderWidth = 1.0;	
     colorLayer.cornerRadius = 4.0;
-    colorLayer.needsDisplayOnBoundsChange = YES;		
+    colorLayer.needsDisplayOnBoundsChange = YES;
 
-    CAGradientLayer *colorGradient = [CAGradientLayer layer];
-    colorGradient.frame = CGRectMake(0, 1, CGRectGetWidth(self.frame), CGRectGetHeight(self.frame)-2);		
-    colorGradient.colors = [NSArray arrayWithObjects:(id)[UIColor colorWithWhite:1 alpha:0.1].CGColor, [UIColor colorWithWhite:0.2 alpha:0.1].CGColor , nil];		
-    colorGradient.locations = [NSArray arrayWithObjects:[NSNumber numberWithFloat:0.0], [NSNumber numberWithFloat:1.0], nil];		
-    colorGradient.cornerRadius = 4.0;
-    colorGradient.needsDisplayOnBoundsChange = YES;	
-
-    [self.layer addSublayer:bevelLayer];
     [self.layer addSublayer:colorLayer];
-    [self.layer addSublayer:colorGradient];
     [self bringSubviewToFront:self.titleLabel];
   
 }
@@ -260,7 +241,7 @@
 }
 
 - (void)disableWithTitle:(NSString *)disabledString{
-    self.disabled = [disabledString retain];    
+    self.disabled = disabledString;    
     [self toggle];	
 }
 
@@ -272,15 +253,17 @@
 }
 
 - (void)setTintColor:(UIColor *)color{
-    self.tint = [UIColor colorWithHue:color.hue saturation:color.saturation+0.15 brightness:color.brightness alpha:1];
-    colorLayer.backgroundColor = tint.CGColor;
+    self.tint = color;
+    [self setTitleColor:tint forState:UIControlStateNormal];
+    colorLayer.borderColor = tint.CGColor;
     [self setNeedsDisplay];
 }
 
-- (void)darken{
+- (void)darken {
     darkenLayer = [CALayer layer];
     darkenLayer.frame = CGRectMake(0, 0, CGRectGetWidth(self.frame), CGRectGetHeight(self.frame));
-    darkenLayer.backgroundColor = [UIColor colorWithWhite:0 alpha:0.2].CGColor;
+    darkenLayer.backgroundColor = [UIColor clearColor].CGColor;
+    darkenLayer.borderColor = [UIColor colorWithWhite:0 alpha:0.2].CGColor;
     darkenLayer.cornerRadius = 4.0;
     darkenLayer.needsDisplayOnBoundsChange = YES;
     [self.layer addSublayer:darkenLayer];

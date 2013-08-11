@@ -98,12 +98,10 @@ static NSLock *crayolaNameCacheLock;
 	CGFloat r,g,b,a;
 	if (![self red:&r green:&g blue:&b alpha:&a]) return nil;
 	
-	return [NSArray arrayWithObjects:
-			[NSNumber numberWithFloat:r],
-			[NSNumber numberWithFloat:g],
-			[NSNumber numberWithFloat:b],
-			[NSNumber numberWithFloat:a],
-			nil];
+	return @[@(r),
+			@(g),
+			@(b),
+			@(a)];
 }
 
 - (BOOL)red:(CGFloat *)red green:(CGFloat *)green blue:(CGFloat *)blue alpha:(CGFloat *)alpha {
@@ -379,7 +377,7 @@ static NSLock *crayolaNameCacheLock;
 		[colors addObject:[UIColor colorWithHue:h2 saturation:s brightness:v alpha:a]];
 	}
 	
-	return [[colors copy] autorelease];
+	return [colors copy];
 }
 
 #pragma mark String utilities
@@ -444,7 +442,7 @@ static NSLock *crayolaNameCacheLock;
     }
     
 	++name;
-	NSString *result = [[[NSString alloc] initWithBytes:name length:bestPos - name encoding:NSUTF8StringEncoding] autorelease];
+	NSString *result = [[NSString alloc] initWithBytes:name length:bestPos - name encoding:NSUTF8StringEncoding];
 	
 	return result;
 }
@@ -522,12 +520,12 @@ static NSLock *crayolaNameCacheLock;
 
 // Lookup a color using css 3/svg color name
 + (UIColor *)colorWithName:(NSString *)cssColorName {
-	return [[UIColor namedColors] objectForKey:cssColorName];
+	return [UIColor namedColors][cssColorName];
 }
 
 // Lookup a color using a crayola name
 + (UIColor *)crayonWithName:(NSString *)crayolaColorName {
-	return [[UIColor namedCrayons] objectForKey:crayolaColorName];
+	return [UIColor namedCrayons][crayolaColorName];
 }
 
 // Return complete mapping of css3/svg color names --> colors
@@ -759,11 +757,10 @@ static const char *crayolaNameDB = ","
 		
 		// Get the color, and add to the dictionary
 		int hex, increment;
-		if (sscanf(++h, "%x%n", &hex, &increment) != 1) {[name release]; break;} // thanks Curtis Duhn
-		[cache setObject:[self colorWithRGBHex:hex] forKey:name];
+		if (sscanf(++h, "%x%n", &hex, &increment) != 1) { break;} // thanks Curtis Duhn
+		cache[name] = [self colorWithRGBHex:hex];
 		
 		// Cleanup and move to the next item
-		[name release];
 		entry = h + increment;
 	}
 	colorNameCache = [cache copy];
@@ -786,11 +783,10 @@ static const char *crayolaNameDB = ","
 		
 		// Get the color, and add to the dictionary
 		int hex, increment;
-		if (sscanf(++h, "%x%n", &hex, &increment) != 1) {[name release]; break;} // thanks Curtis Duhn
-		[cache setObject:[self colorWithRGBHex:hex] forKey:name];
+		if (sscanf(++h, "%x%n", &hex, &increment) != 1) { break;} // thanks Curtis Duhn
+		cache[name] = [self colorWithRGBHex:hex];
 		
 		// Cleanup and move to the next item
-		[name release];
 		entry = h + increment;
 	}
 	crayolaNameCache = [cache copy];
