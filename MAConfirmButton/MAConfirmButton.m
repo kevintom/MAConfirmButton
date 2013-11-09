@@ -235,6 +235,13 @@
   
 }
 
+-(void)reset
+{
+    self.disabled = nil;
+    confirmed = NO;
+    [self cancel];
+}
+
 - (void)setSelected:(BOOL)s{	
     selected = s;
     [self toggle];
