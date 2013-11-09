@@ -240,6 +240,7 @@
     self.disabled = nil;
     confirmed = NO;
     [self cancel];
+    [self toggle];
 }
 
 - (void)setSelected:(BOOL)s{	
